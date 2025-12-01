@@ -98,9 +98,9 @@ npm install
 | Action | Shortcut |
 |--------|----------|
 | Show/Hide Window | `Ctrl+Shift+I` |
-| Voice Input (Hold to Speak) | `Ctrl+L` (hold) |
-| Capture Full Screen | `Ctrl+S` |
-| Capture Area Behind App | `Ctrl+P` |
+| Voice Input (Hold to Speak) | `Ctrl+1` (hold) |
+| Capture Full Screen | `Ctrl+2` |
+| Capture Area Behind App | `Ctrl+3` |
 | Send Message | `Enter` |
 | New Line | `Shift+Enter` |
 
