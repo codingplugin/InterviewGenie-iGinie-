@@ -5,8 +5,11 @@ An invisible chatbot assistant that helps you answer technical interview questio
 ## ✨ Features
 
 - 🤖 **AI-Powered Answers** - Get instant, interview-ready responses using Google Gemini API
-- 💬 **Chatbot Interface** - Simple Q&A format like ChatGPT
+- 🎤 **Voice Input** - Hold Ctrl+L to speak your question (captures both you and interviewer)
+- � **Screen Capture** - Analyze coding problems directly from your screen (Ctrl+S / Ctrl+P)
+- �💬 **Chatbot Interface** - Simple Q&A format like ChatGPT
 - 🎭 **Interview-Optimized** - Concise, natural answers that sound genuine when spoken
+- 🔤 **Multi-Language Support** - Choose your preferred coding language (Python, C++, Java, JS, C#)
 - 👻 **Invisible to Screen Sharing** - Won't appear on Zoom, Teams, Meet, etc.
 - ⚡ **Quick Toggle** - Show/hide with `Ctrl+Shift+I`
 - 🎨 **Beautiful UI** - Modern dark theme with glassmorphism
@@ -14,27 +17,58 @@ An invisible chatbot assistant that helps you answer technical interview questio
 
 ## 🚀 Quick Start
 
+### Prerequisites
+Before you begin, make sure you have:
+- **Node.js** (v16 or higher) - [Download here](https://nodejs.org/)
+- **npm** (comes with Node.js)
+- **Git** (optional, for cloning) - [Download here](https://git-scm.com/)
+- **Google Gemini API Key** (free) - [Get it here](https://aistudio.google.com/app/apikey)
+
 ### Installation
+
+#### Option 1: Clone with Git
 ```bash
+# Clone the repository
+git clone https://github.com/codingplugin/Unsharable.git
+
+# Navigate to the project folder
+cd Unsharable
+
+# Install dependencies
 npm install
 ```
 
-### Run
-```bash
-npm start
-```
+#### Option 2: Download ZIP
+1. Click the green **Code** button on GitHub
+2. Select **Download ZIP**
+3. Extract the ZIP file
+4. Open terminal/command prompt in the extracted folder
+5. Run: `npm install`
+
+### Getting Your API Key
+1. Visit [Google AI Studio](https://aistudio.google.com/app/apikey)
+2. Sign in with your Google account
+3. Click **"Create API Key"**
+4. Copy the generated key (starts with `AIza...`)
+5. Keep it safe - you'll need it in the next step!
 
 ### First Time Setup
-1. Press `Ctrl+Shift+I` to show the window
-2. Click ⚙️ Settings
-3. Enter your Gemini API key from [Google AI Studio](https://aistudio.google.com)
-4. Click Save
+1. Run the app:
+   ```bash
+   npm start
+   ```
+2. Press `Ctrl+Shift+I` to show the window
+3. Click ⚙️ **Settings**
+4. Paste your Gemini API key
+5. (Optional) Enter a custom model ID or leave blank for auto
+6. Click **Save**
 
-### Usage
-1. Type your interview question
-2. Press Enter or click Send
-3. Read the concise, interview-ready answer
-4. Press `Ctrl+Shift+I` to hide when done
+### Daily Usage
+1. **Start the app:** `npm start`
+2. **Show window:** Press `Ctrl+Shift+I`
+3. **Ask questions:** Type and press Enter
+4. **Hide window:** Press `Ctrl+Shift+I` again
+5. **Close app:** Click the × button or close terminal
 
 ## 🎯 Perfect For
 
@@ -64,8 +98,33 @@ npm start
 | Action | Shortcut |
 |--------|----------|
 | Show/Hide Window | `Ctrl+Shift+I` |
+| Voice Input (Hold to Speak) | `Ctrl+L` (hold) |
+| Capture Full Screen | `Ctrl+S` |
+| Capture Area Behind App | `Ctrl+P` |
 | Send Message | `Enter` |
 | New Line | `Shift+Enter` |
+
+## 🎤 Advanced Features
+
+### Voice Input
+Hold `Ctrl+L` to record your question:
+- Captures **both** your microphone and system audio (interviewer's voice)
+- Automatically transcribes and answers the question
+- Perfect for live interview scenarios
+- Release the key to send
+
+### Screen Capture
+Analyze code problems from your screen:
+- **`Ctrl+S`** - Capture full screen and get AI analysis
+- **`Ctrl+P`** - Capture the area behind the app window
+- Great for solving coding challenges shown on screen
+- AI will read the problem and provide the solution
+
+### Language Selection
+Choose your preferred coding language from the dropdown:
+- Auto (default) - AI decides based on context
+- Python, C++, Java, JavaScript, C#
+- All code solutions will be in your selected language
 
 ## 🔧 How It Works
 
