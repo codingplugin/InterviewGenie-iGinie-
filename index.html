@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interview Assistant</title>
+    <title>iGenie</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
@@ -13,7 +13,7 @@
     <div class="app-container">
         <!-- Header -->
         <div class="header">
-            <div class="logo">⚡ Interview Assistant</div>
+            <div class="logo">⚡ iGenie</div>
             <div class="controls">
                 <select id="languageSelect" class="lang-select" title="Select Coding Language">
                     <option value="auto">Auto</option>
@@ -51,16 +51,73 @@
         <div id="settingsModal" class="modal">
             <div class="modal-content">
                 <h3>Settings</h3>
-                <div class="input-group">
-                    <label>Gemini API Key</label>
-                    <input type="password" id="apiKeyInput" placeholder="Enter your API key">
-                    <small>Get a free key at <a href="https://aistudio.google.com"
-                            target="_blank">aistudio.google.com</a></small>
+
+                <div class="modal-body">
+                    <div class="input-group">
+                        <label>API Keys (Auto-Rotation)</label>
+                        <div id="apiKeyContainer"
+                            style="max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 5px;">
+                            <input type="text" class="api-key-input" placeholder="API Key 1">
+                            <input type="text" class="api-key-input" placeholder="API Key 2">
+                            <input type="text" class="api-key-input" placeholder="API Key 3">
+                            <input type="text" class="api-key-input" placeholder="API Key 4">
+                            <input type="text" class="api-key-input" placeholder="API Key 5">
+                            <input type="text" class="api-key-input" placeholder="API Key 6">
+                            <input type="text" class="api-key-input" placeholder="API Key 7">
+                            <input type="text" class="api-key-input" placeholder="API Key 8">
+                            <input type="text" class="api-key-input" placeholder="API Key 9">
+                            <input type="text" class="api-key-input" placeholder="API Key 10">
+                        </div>
+                        <small>Keys will be used in order. If one fails, the next takes over.</small>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Model ID</label>
+                        <input type="text" id="modelInput" placeholder="e.g. gemini-1.5-pro">
+                        <small>Leave empty for Gemini auto-detect</small>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Custom Shortcuts (Ctrl + Key)</label>
+                        <div style="display: flex; gap: 10px; margin-bottom: 5px;">
+                            <div style="flex: 1;">
+                                <label style="font-size: 12px; color: #94a3b8;">Voice</label>
+                                <input type="text" id="shortcutVoice" placeholder="L" maxlength="1"
+                                    style="text-align: center; text-transform: uppercase; background: rgba(10, 10, 18, 0.5); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 6px; color: #e0e7ff; padding: 8px; width: 100%;">
+                            </div>
+                            <div style="flex: 1;">
+                                <label style="font-size: 12px; color: #94a3b8;">Screen</label>
+                                <input type="text" id="shortcutScreen" placeholder="S" maxlength="1"
+                                    style="text-align: center; text-transform: uppercase; background: rgba(10, 10, 18, 0.5); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 6px; color: #e0e7ff; padding: 8px; width: 100%;">
+                            </div>
+                            <div style="flex: 1;">
+                                <label style="font-size: 12px; color: #94a3b8;">Area</label>
+                                <input type="text" id="shortcutArea" placeholder="P" maxlength="1"
+                                    style="text-align: center; text-transform: uppercase; background: rgba(10, 10, 18, 0.5); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 6px; color: #e0e7ff; padding: 8px; width: 100%;">
+                            </div>
+                        </div>
+                        <small>Enter a single letter for each (e.g. A, B, C)</small>
+                    </div>
+
+                    <div class="input-group">
+                        <label>📝 Text Prompt (Standard Chat)</label>
+                        <textarea id="promptTextInput" placeholder="Prompt for text questions..."
+                            style="min-height: 100px;"></textarea>
+                    </div>
+
+                    <div class="input-group">
+                        <label>🎤 Voice Prompt (Audio)</label>
+                        <textarea id="promptVoiceInput" placeholder="Prompt for audio/voice questions..."
+                            style="min-height: 100px;"></textarea>
+                    </div>
+
+                    <div class="input-group">
+                        <label>📸 Image Prompt (Screenshots)</label>
+                        <textarea id="promptImageInput" placeholder="Prompt for screenshot analysis..."
+                            style="min-height: 100px;"></textarea>
+                    </div>
                 </div>
-                <div class="input-group">
-                    <label>Model ID (Optional)</label>
-                    <input type="text" id="modelInput" placeholder="e.g. gemini-1.5-pro (Leave empty for auto)">
-                </div>
+
                 <div class="modal-actions">
                     <button id="saveSettingsBtn" class="btn primary-btn">Save</button>
                     <button id="closeSettingsBtn" class="btn">Cancel</button>
@@ -75,7 +132,7 @@
                 <div class="shortcuts-list">
                     <div class="shortcut-item">
                         <span class="key">Ctrl + L</span>
-                        <span class="desc">Hold to Speak (Voice Input)</span>
+                        <span class="desc">Hold to Speak</span>
                     </div>
                     <div class="shortcut-item">
                         <span class="key">Ctrl + S</span>
@@ -92,6 +149,17 @@
                 </div>
                 <div class="modal-actions">
                     <button id="closeHelpBtn" class="btn primary-btn">Got it</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Confirm Dialog -->
+        <div id="confirmDialog" class="confirm-dialog">
+            <div class="confirm-content">
+                <p id="confirmMessage">Are you sure?</p>
+                <div class="confirm-actions">
+                    <button id="confirmYes" class="btn primary-btn">Yes</button>
+                    <button id="confirmNo" class="btn">No</button>
                 </div>
             </div>
         </div>

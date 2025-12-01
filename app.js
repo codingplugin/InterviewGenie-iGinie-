@@ -6,7 +6,6 @@ let messageInput;
 let sendBtn;
 let settingsBtn;
 let settingsModal;
-let apiKeyInput;
 let modelInput;
 let saveSettingsBtn;
 let closeSettingsBtn;
@@ -17,20 +16,79 @@ let languageSelect;
 let helpBtn;
 let helpModal;
 let closeHelpBtn;
+let shortcutVoiceInput;
+let shortcutScreenInput;
+let shortcutAreaInput;
+let promptTextInput;
+let promptVoiceInput;
+let promptImageInput;
+let confirmDialog;
+let confirmMessage;
+let confirmYes;
+let confirmNo;
+
+// Default Prompts
+const DEFAULT_PROMPT_TEXT = `You are an expert interview coach helping someone answer technical interview questions.
+
+IMPORTANT RULES:
+1. Give CONCISE answers 
+2. Sound NATURAL and CONVERSATIONAL - like a real person talking in an interview
+3. Avoid robotic or overly formal language 
+4. For technical concepts: Give the key points, maybe one example, then stop
+5. For coding questions: Provide clean, working code with minimal comments
+6. **NO GREETINGS OR FILLER**: Do not say "Here is the answer", "I understand", "Sure", or "Let me help". JUST GIVE THE ANSWER.
+7. Use simple, clear language that's easy to read aloud
+8. If it's a "what is" question, give a brief definition and one practical use case
+9. If it's a "how to" question, give the approach in 3-4 steps maximum
+10. Never write long paragraphs - keep it punchy and memorable
+11. If it's a "why" question, give the reason and one example
+12. If it's a "what are the differences between" question, give the differences with points and one example
+13. Give the answer in points if necessary.
+14. Answer the question in sequence of what is asked
+15. Always use simple words to answer the questions`;
+
+const DEFAULT_PROMPT_VOICE = `INSTRUCTION: The user has provided an audio recording. This audio is STEREO. 
+- **LEFT CHANNEL**: This is the CANDIDATE (User).
+- **RIGHT CHANNEL**: This is the INTERVIEWER.
+
+Your task is to:
+1. Identify who is speaking based on the channel.
+2. If the INTERVIEWER (Right Channel) asks a question, provide the answer for the Candidate to say.
+3. If the CANDIDATE (Left Channel) asks you for help, answer their specific request.
+4. Start your response with "TRANSCRIPTION: " followed by a transcript of the audio (labeling speakers as [Interviewer] or [Candidate] if possible). Then, add a newline and provide the ANSWER.`;
+
+const DEFAULT_PROMPT_IMAGE = `INSTRUCTION: The user has provided a screenshot. This image likely contains a Data Structures & Algorithms (DSA) problem, a coding challenge, or a technical interview question.
+Your task is to:
+1. **Analyze the image** to extract the problem statement or code.
+2. **Solve the problem**:
+   * If it's a **DSA/Coding problem**: Provide the optimal solution code immediately. Keep explanations brief but mention Time/Space complexity.
+   * If it's a **Multiple Choice Question**: State the correct option and a one-sentence reason.
+   * If it's a **Conceptual Question**: Answer concisely following the main rules.
+3. **Ignore** any irrelevant screen elements and focus on the technical content.`;
 
 // State
-let apiKey = localStorage.getItem('gemini-api-key') || '';
-let customModelId = localStorage.getItem('gemini-model-id') || '';
+let apiKey = localStorage.getItem('api-key') || '';
+let customModelId = localStorage.getItem('model-id') || '';
 let selectedLanguage = localStorage.getItem('coding-language') || 'auto';
 let conversationHistory = [];
+let confirmResolve = null;
+
+// Prompt State
+let promptText = localStorage.getItem('prompt-text') || DEFAULT_PROMPT_TEXT;
+let promptVoice = localStorage.getItem('prompt-voice') || DEFAULT_PROMPT_VOICE;
+let promptImage = localStorage.getItem('prompt-image') || DEFAULT_PROMPT_IMAGE;
+
+// Shortcuts State (Default: L, S, P)
+let shortcutVoice = localStorage.getItem('shortcut-voice') || 'l';
+let shortcutScreen = localStorage.getItem('shortcut-screen') || 's';
+let shortcutArea = localStorage.getItem('shortcut-area') || 'p';
 
 // Voice Recording (MediaRecorder)
 let mediaRecorder = null;
 let audioChunks = [];
 let isRecording = false;
 let isCtrlLPressed = false;
-let audioContext = null;
-let audioStream = null;
+let audioContext = null; // Global AudioContext
 
 // Initialize app when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
@@ -43,7 +101,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const clearBtn = document.getElementById('clearBtn');
     settingsBtn = document.getElementById('settingsBtn');
     settingsModal = document.getElementById('settingsModal');
-    apiKeyInput = document.getElementById('apiKeyInput');
     modelInput = document.getElementById('modelInput');
     saveSettingsBtn = document.getElementById('saveSettingsBtn');
     closeSettingsBtn = document.getElementById('closeSettingsBtn');
@@ -54,14 +111,39 @@ document.addEventListener('DOMContentLoaded', () => {
     helpBtn = document.getElementById('helpBtn');
     helpModal = document.getElementById('helpModal');
     closeHelpBtn = document.getElementById('closeHelpBtn');
+    shortcutVoiceInput = document.getElementById('shortcutVoice');
+    shortcutScreenInput = document.getElementById('shortcutScreen');
+    shortcutAreaInput = document.getElementById('shortcutArea');
+    promptTextInput = document.getElementById('promptTextInput');
+    promptVoiceInput = document.getElementById('promptVoiceInput');
+    promptImageInput = document.getElementById('promptImageInput');
+    confirmDialog = document.getElementById('confirmDialog');
+    confirmMessage = document.getElementById('confirmMessage');
+    confirmYes = document.getElementById('confirmYes');
+    confirmNo = document.getElementById('confirmNo');
 
     // Load saved settings
     if (apiKey) {
-        apiKeyInput.value = apiKey;
+        const keys = apiKey.split(',').map(k => k.trim());
+        const inputs = document.querySelectorAll('.api-key-input');
+        inputs.forEach((input, index) => {
+            if (keys[index]) input.value = keys[index];
+        });
     }
-    if (customModelId) {
-        modelInput.value = customModelId;
-    }
+    if (customModelId) modelInput.value = customModelId;
+
+    // Load saved shortcuts into inputs
+    if (shortcutVoiceInput) shortcutVoiceInput.value = shortcutVoice.toUpperCase();
+    if (shortcutScreenInput) shortcutScreenInput.value = shortcutScreen.toUpperCase();
+    if (shortcutAreaInput) shortcutAreaInput.value = shortcutArea.toUpperCase();
+
+    // Load saved prompts into inputs
+    if (promptTextInput) promptTextInput.value = promptText;
+    if (promptVoiceInput) promptVoiceInput.value = promptVoice;
+    if (promptImageInput) promptImageInput.value = promptImage;
+
+    // Update UI with current shortcuts
+    updateShortcutUI();
 
     // Load saved language
     if (languageSelect) {
@@ -78,8 +160,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Clear Chat Logic
     if (clearBtn) {
-        clearBtn.addEventListener('click', () => {
-            if (confirm('Are you sure you want to clear the chat history?')) {
+        clearBtn.addEventListener('click', async () => {
+            if (await showConfirm('Are you sure you want to clear the chat history?')) {
                 chatContainer.innerHTML = `
                     <div class="welcome-message">
                         <h2>👋 Welcome!</h2>
@@ -95,7 +177,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     messageInput.addEventListener('keydown', (e) => {
         // Don't interfere with shortcuts
-        if (e.ctrlKey && (e.key.toLowerCase() === 'l' || e.key.toLowerCase() === 's' || e.key.toLowerCase() === 'p')) {
+        if (e.ctrlKey && (
+            e.key.toLowerCase() === shortcutVoice.toLowerCase() ||
+            e.key.toLowerCase() === shortcutScreen.toLowerCase() ||
+            e.key.toLowerCase() === shortcutArea.toLowerCase()
+        )) {
             return;
         }
 
@@ -115,17 +201,44 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     saveSettingsBtn.addEventListener('click', () => {
-        apiKey = apiKeyInput.value.trim();
+        // Collect all API keys
+        const inputs = document.querySelectorAll('.api-key-input');
+        const keys = Array.from(inputs).map(input => input.value.trim()).filter(k => k);
+        apiKey = keys.join(',');
+
         customModelId = modelInput.value.trim();
 
+        // Save Shortcuts
+        const newVoice = shortcutVoiceInput.value.trim().toLowerCase();
+        const newScreen = shortcutScreenInput.value.trim().toLowerCase();
+        const newArea = shortcutAreaInput.value.trim().toLowerCase();
+
+        if (newVoice) shortcutVoice = newVoice;
+        if (newScreen) shortcutScreen = newScreen;
+        if (newArea) shortcutArea = newArea;
+
+        localStorage.setItem('shortcut-voice', shortcutVoice);
+        localStorage.setItem('shortcut-screen', shortcutScreen);
+        localStorage.setItem('shortcut-area', shortcutArea);
+
+        // Save Prompts
+        promptText = promptTextInput.value.trim();
+        promptVoice = promptVoiceInput.value.trim();
+        promptImage = promptImageInput.value.trim();
+
+        localStorage.setItem('prompt-text', promptText);
+        localStorage.setItem('prompt-voice', promptVoice);
+        localStorage.setItem('prompt-image', promptImage);
+
         if (apiKey) {
-            localStorage.setItem('gemini-api-key', apiKey);
-            localStorage.setItem('gemini-model-id', customModelId);
+            localStorage.setItem('api-key', apiKey);
+            localStorage.setItem('model-id', customModelId);
 
             addSystemMessage('✅ Settings saved successfully!');
+            updateShortcutUI(); // Update UI with new shortcuts
             settingsModal.classList.remove('show');
         } else {
-            addSystemMessage('❌ Please enter a valid API key');
+            addSystemMessage('❌ Please enter at least one API key');
         }
     });
 
@@ -145,11 +258,30 @@ document.addEventListener('DOMContentLoaded', () => {
         ipcRenderer.send('minimize-app');
     });
 
-    closeBtn.addEventListener('click', () => {
-        if (confirm('Are you sure you want to close?')) {
+    closeBtn.addEventListener('click', async () => {
+        if (await showConfirm('Are you sure you want to close?')) {
             ipcRenderer.send('close-app');
         }
     });
+
+    // Setup custom confirm dialog
+    if (confirmYes && confirmNo) {
+        confirmYes.addEventListener('click', () => {
+            if (confirmResolve) {
+                confirmResolve(true);
+                confirmResolve = null;
+            }
+            confirmDialog.classList.remove('show');
+        });
+
+        confirmNo.addEventListener('click', () => {
+            if (confirmResolve) {
+                confirmResolve(false);
+                confirmResolve = null;
+            }
+            confirmDialog.classList.remove('show');
+        });
+    }
 
     opacitySlider.addEventListener('input', (e) => {
         ipcRenderer.send('set-opacity', e.target.value / 100);
@@ -170,17 +302,41 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('Chatbot ready! Press Ctrl+L (Audio), Ctrl+S (Screen), Ctrl+P (Area).');
 });
 
+// Custom Confirm Dialog (Invisible during screen sharing)
+function showConfirm(message) {
+    return new Promise((resolve) => {
+        confirmMessage.textContent = message;
+        confirmDialog.classList.add('show');
+        confirmResolve = resolve;
+    });
+}
+
+function updateShortcutUI() {
+    // Update Placeholder
+    if (messageInput) {
+        messageInput.placeholder = `Type your question or hold Ctrl+${shortcutVoice.toUpperCase()} to speak...`;
+    }
+
+    // Update Help Modal Text
+    const keys = document.querySelectorAll('.shortcut-item .key');
+    if (keys.length >= 3) {
+        keys[0].textContent = `Ctrl + ${shortcutVoice.toUpperCase()}`;
+        keys[1].textContent = `Ctrl + ${shortcutScreen.toUpperCase()}`;
+        keys[2].textContent = `Ctrl + ${shortcutArea.toUpperCase()}`;
+    }
+}
+
 // Screen Capture Setup
 function setupScreenCapture() {
     document.addEventListener('keydown', async (e) => {
-        // Ctrl+S to capture full screen
-        if (e.ctrlKey && e.key.toLowerCase() === 's') {
+        // Ctrl+S (or custom) to capture full screen
+        if (e.ctrlKey && e.key.toLowerCase() === shortcutScreen.toLowerCase()) {
             e.preventDefault();
             await captureScreen('full');
         }
 
-        // Ctrl+P to capture area behind app
-        if (e.ctrlKey && e.key.toLowerCase() === 'p') {
+        // Ctrl+P (or custom) to capture area behind app
+        if (e.ctrlKey && e.key.toLowerCase() === shortcutArea.toLowerCase()) {
             e.preventDefault();
             await captureScreen('area');
         }
@@ -204,8 +360,8 @@ async function captureScreen(mode = 'full') {
         const channel = mode === 'area' ? 'capture-area' : 'capture-screen';
         const imageBase64 = await ipcRenderer.invoke(channel);
 
-        // Send to Gemini
-        const response = await callGeminiAPI(null, null, imageBase64);
+        // Send to AI
+        const response = await callAI(null, null, imageBase64);
         addMessage(response, 'ai');
 
     } catch (error) {
@@ -226,9 +382,16 @@ async function setupAudioRecording() {
         return;
     }
 
-    // Push-to-talk: Hold Ctrl+L to record
+    // Initialize AudioContext once
+    try {
+        audioContext = new AudioContext();
+    } catch (e) {
+        console.warn('Could not init AudioContext:', e);
+    }
+
+    // Push-to-talk: Hold Ctrl+L (or custom) to record
     document.addEventListener('keydown', async (e) => {
-        if (e.ctrlKey && e.key.toLowerCase() === 'l') {
+        if (e.ctrlKey && e.key.toLowerCase() === shortcutVoice.toLowerCase()) {
             e.preventDefault();
 
             if (!isCtrlLPressed && !isRecording) {
@@ -239,7 +402,7 @@ async function setupAudioRecording() {
     });
 
     document.addEventListener('keyup', (e) => {
-        if (e.key === 'Control' || e.key.toLowerCase() === 'l') {
+        if (e.key === 'Control' || e.key.toLowerCase() === shortcutVoice.toLowerCase()) {
             if (isCtrlLPressed) {
                 isCtrlLPressed = false;
                 stopRecording();
@@ -249,13 +412,26 @@ async function setupAudioRecording() {
 }
 
 async function startRecording() {
+    // Immediate UI Feedback
+    showListeningIndicator(true); // true = "Initializing"
+
     try {
         let finalStream;
 
+        // Parallelize stream acquisition for speed
+        const [sourceId, micStream] = await Promise.all([
+            ipcRenderer.invoke('get-desktop-source-id'),
+            navigator.mediaDevices.getUserMedia({
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true
+                }
+            })
+        ]);
+
+        let systemStream;
         try {
-            // 1. Get System Audio (Desktop)
-            const sourceId = await ipcRenderer.invoke('get-desktop-source-id');
-            const systemStream = await navigator.mediaDevices.getUserMedia({
+            systemStream = await navigator.mediaDevices.getUserMedia({
                 audio: {
                     mandatory: {
                         chromeMediaSource: 'desktop',
@@ -269,17 +445,17 @@ async function startRecording() {
                     }
                 }
             });
+        } catch (sysErr) {
+            console.warn('System audio failed:', sysErr);
+            // Fallback to mic only if system audio fails
+        }
 
-            // 2. Get Microphone Audio
-            const micStream = await navigator.mediaDevices.getUserMedia({
-                audio: {
-                    echoCancellation: true,
-                    noiseSuppression: true
-                }
-            });
+        if (systemStream) {
+            // Mix them using AudioContext with STEREO SEPARATION
+            if (audioContext.state === 'suspended') {
+                await audioContext.resume();
+            }
 
-            // 3. Mix them using AudioContext with STEREO SEPARATION
-            audioContext = new AudioContext();
             const destination = audioContext.createMediaStreamDestination();
             destination.channelCount = 2; // Ensure stereo output
 
@@ -298,20 +474,14 @@ async function startRecording() {
             systemPanner.connect(destination);
 
             finalStream = destination.stream;
-            audioStream = finalStream; // Keep reference to stop later
 
             // Note: We don't need the video track from system stream
             systemStream.getVideoTracks().forEach(track => track.stop());
-
-        } catch (mixError) {
-            console.warn('System audio capture failed, falling back to mic only:', mixError);
-            // Fallback: Mic only
-            finalStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            audioStream = finalStream;
+        } else {
+            finalStream = micStream;
         }
 
-        // 4. Start Recording
-        // Important: Request stereo recording
+        // Start Recording
         mediaRecorder = new MediaRecorder(finalStream, {
             mimeType: 'audio/webm;codecs=opus',
             audioBitsPerSecond: 128000
@@ -336,17 +506,20 @@ async function startRecording() {
 
             // Stop all tracks
             finalStream.getTracks().forEach(track => track.stop());
-            if (audioContext) audioContext.close();
+            // Don't close AudioContext, keep it for next time
         };
 
         mediaRecorder.start();
         isRecording = true;
-        console.log('🎤 Recording started (Stereo: Mic=Left, System=Right)');
-        showListeningIndicator();
+        console.log('🎤 Recording started');
+
+        // Update UI to "Recording" state
+        updateListeningIndicatorText(`🎤 Recording... (Release Ctrl+${shortcutVoice.toUpperCase()} to send)`);
 
     } catch (err) {
         console.error('Error starting recording:', err);
         addSystemMessage('❌ Could not access audio: ' + err.message);
+        hideListeningIndicator();
         isCtrlLPressed = false; // Reset state
     }
 }
@@ -360,7 +533,7 @@ function stopRecording() {
     }
 }
 
-function showListeningIndicator() {
+function showListeningIndicator(isInitializing = false) {
     // Remove welcome message if exists
     const welcomeMsg = chatContainer.querySelector('.welcome-message');
     if (welcomeMsg) {
@@ -380,14 +553,26 @@ function showListeningIndicator() {
                     <div class="pulse"></div>
                     <div class="pulse"></div>
                 </div>
-                <div class="listening-text">🎤 Recording... (Release Ctrl+L to send)</div>
+                <div class="listening-text" id="listening-text">🎤 Initializing...</div>
             </div>
         `;
         chatContainer.appendChild(indicator);
     }
 
+    const textEl = document.getElementById('listening-text');
+    if (textEl) {
+        textEl.textContent = isInitializing ? '🎤 Initializing...' : `🎤 Recording... (Release Ctrl+${shortcutVoice.toUpperCase()} to send)`;
+    }
+
     // Scroll to bottom
     chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+function updateListeningIndicatorText(text) {
+    const textEl = document.getElementById('listening-text');
+    if (textEl) {
+        textEl.textContent = text;
+    }
 }
 
 function hideListeningIndicator() {
@@ -412,14 +597,14 @@ async function sendAudioMessage(base64Audio) {
     sendBtn.textContent = 'Thinking...';
 
     try {
-        // Call Gemini API with Audio
-        let response = await callGeminiAPI(null, base64Audio, null);
+        // Call AI with Audio
+        let response = await callAI(null, base64Audio, null);
 
         // Check for transcription
         if (response.startsWith('TRANSCRIPTION:')) {
             const splitIndex = response.indexOf('\n');
             if (splitIndex !== -1) {
-                const transcription = response.substring(14, splitIndex).trim(); // 14 is length of "TRANSCRIPTION: "
+                const transcription = response.substring(14, splitIndex).trim();
                 const answer = response.substring(splitIndex).trim();
 
                 // Update the last user message with the transcription
@@ -466,8 +651,8 @@ async function sendMessage() {
     sendBtn.textContent = 'Thinking...';
 
     try {
-        // Call Gemini API with Text
-        const response = await callGeminiAPI(message, null, null);
+        // Call AI with Text
+        const response = await callAI(message, null, null);
         addMessage(response, 'ai');
     } catch (error) {
         console.error('Error:', error);
@@ -531,20 +716,25 @@ function addSystemMessage(text) {
     chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
-// Call Gemini API
-async function callGeminiAPI(prompt, audioBase64 = null, imageBase64 = null) {
-    // Default models to try if no custom model is specified
-    const defaultModels = ['gemini-2.0-flash', 'gemini-1.5-flash-latest', 'gemini-1.5-flash'];
+// Universal AI Call Function (Now Gemini Only)
+async function callAI(prompt, audioBase64 = null, imageBase64 = null) {
+    return await callGeminiAPI(prompt, audioBase64, imageBase64);
+}
 
-    // If user specified a custom model, try that FIRST.
-    // If it fails, we can optionally fall back to defaults, or just fail.
-    // For now, let's prioritize the custom model.
+// Call Gemini API with Key Rotation
+async function callGeminiAPI(prompt, audioBase64 = null, imageBase64 = null) {
+    const defaultModels = ['gemini-2.0-flash-exp', 'gemini-1.5-flash-latest', 'gemini-1.5-flash'];
     let modelsToTry = [...defaultModels];
 
     if (customModelId && customModelId.trim() !== '') {
-        // Prepend custom model to the list
         modelsToTry = [customModelId.trim(), ...defaultModels];
-        console.log('Using custom model preference:', customModelId);
+    }
+
+    // Parse API keys (handle comma-separated list)
+    const apiKeys = apiKey.split(',').map(k => k.trim()).filter(k => k);
+
+    if (apiKeys.length === 0) {
+        throw new Error('No valid API key provided.');
     }
 
     let lastError = null;
@@ -556,87 +746,88 @@ async function callGeminiAPI(prompt, audioBase64 = null, imageBase64 = null) {
         languageInstruction = `\nIMPORTANT: All coding solutions MUST be written in ${langName}. Do not use any other language.`;
     }
 
-    for (const model of modelsToTry) {
-        try {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    // Try each key in rotation
+    for (let i = 0; i < apiKeys.length; i++) {
+        const currentKey = apiKeys[i];
 
-            const parts = [];
+        // Try models with this key
+        for (const model of modelsToTry) {
+            try {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${currentKey}`;
 
-            // Add system prompt
-            parts.push({
-                text: `You are an expert interview coach helping someone answer technical interview questions.
+                const parts = [];
 
-IMPORTANT RULES:
-1. Give CONCISE answers 
-2. Sound NATURAL and CONVERSATIONAL - like a real person talking in an interview
-3. Avoid robotic or overly formal language
-4. For technical concepts: Give the key points, maybe one example, then stop
-5. For coding questions: Provide clean, working code with minimal comments
-6. **NO GREETINGS OR FILLER**: Do not say "Here is the answer", "I understand", "Sure", or "Let me help". JUST GIVE THE ANSWER.
-7. Use simple, clear language that's easy to read aloud
-8. If it's a "what is" question, give a brief definition and one practical use case
-9. If it's a "how to" question, give the approach in 3-4 steps maximum
-10. Never write long paragraphs - keep it punchy and memorable
-11. If it's a "why" question, give the reason and one example
-12. If it's a "what are the differences between" question, give the differences with points and one example
-13. Give the answer in points if necessary.
-14. Answer the question in sequence of what is asked
-${languageInstruction}
+                // Add system prompt based on input type
+                let finalPrompt = promptText; // Default to text prompt
 
-${audioBase64 ? 'INSTRUCTION: The user has provided an audio recording. This audio is STEREO. \n- **LEFT CHANNEL**: This is the CANDIDATE (User).\n- **RIGHT CHANNEL**: This is the INTERVIEWER.\n\nYour task is to:\n1. Identify who is speaking based on the channel.\n2. If the INTERVIEWER (Right Channel) asks a question, provide the answer for the Candidate to say.\n3. If the CANDIDATE (Left Channel) asks you for help, answer their specific request.\n4. Start your response with "TRANSCRIPTION: " followed by a transcript of the audio (labeling speakers as [Interviewer] or [Candidate] if possible). Then, add a newline and provide the ANSWER.' : ''}
-${imageBase64 ? 'INSTRUCTION: The user has provided a screenshot. This image likely contains a Data Structures & Algorithms (DSA) problem, a coding challenge, or a technical interview question.\nYour task is to:\n1. **Analyze the image** to extract the problem statement or code.\n2. **Solve the problem**:\n   * If it\'s a **DSA/Coding problem**: Provide the optimal solution code immediately. Keep explanations brief but mention Time/Space complexity.\n   * If it\'s a **Multiple Choice Question**: State the correct option and a one-sentence reason.\n   * If it\'s a **Conceptual Question**: Answer concisely following the main rules.\n3. **Ignore** any irrelevant screen elements and focus on the technical content.' : ''}`
-            });
+                if (audioBase64) {
+                    finalPrompt += '\n\n' + promptVoice;
+                } else if (imageBase64) {
+                    finalPrompt += '\n\n' + promptImage;
+                }
 
-            // Add Audio if present
-            if (audioBase64) {
+                // Add language instruction
+                finalPrompt += languageInstruction;
+
+                // Add system prompt
                 parts.push({
-                    inline_data: {
-                        mime_type: "audio/webm",
-                        data: audioBase64
-                    }
+                    text: finalPrompt
                 });
-            }
 
-            // Add Image if present
-            if (imageBase64) {
-                parts.push({
-                    inline_data: {
-                        mime_type: "image/png",
-                        data: imageBase64
-                    }
+                // Add Audio if present
+                if (audioBase64) {
+                    parts.push({
+                        inline_data: {
+                            mime_type: "audio/webm",
+                            data: audioBase64
+                        }
+                    });
+                }
+
+                // Add Image if present
+                if (imageBase64) {
+                    parts.push({
+                        inline_data: {
+                            mime_type: "image/png",
+                            data: imageBase64
+                        }
+                    });
+                }
+
+                // Add User Text Prompt if present
+                if (prompt) {
+                    parts.push({ text: `User Question: ${prompt}` });
+                }
+
+                const requestBody = {
+                    contents: [{ parts: parts }]
+                };
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestBody)
                 });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.error?.message || 'API request failed');
+                }
+
+                const data = await response.json();
+                return data.candidates[0].content.parts[0].text;
+
+            } catch (err) {
+                console.warn(`Key ${i + 1} / Model ${model} failed:`, err);
+                lastError = err;
+                // Continue to next model with same key
             }
-
-            // Add User Text Prompt if present
-            if (prompt) {
-                parts.push({ text: `User Question: ${prompt}` });
-            }
-
-            const requestBody = {
-                contents: [{ parts: parts }]
-            };
-
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(requestBody)
-            });
-
-            if (!response.ok) {
-                const err = await response.json();
-                throw new Error(err.error?.message || 'API request failed');
-            }
-
-            const data = await response.json();
-            return data.candidates[0].content.parts[0].text;
-
-        } catch (err) {
-            console.warn(`Model ${model} failed:`, err);
-            lastError = err;
         }
+        // If all models failed for this key, loop continues to next key
+        console.log(`Key ${i + 1} exhausted, switching to next key...`);
     }
 
-    throw lastError || new Error('All models failed. Please check your API key or Model ID.');
+    throw lastError || new Error('All keys and models failed. Please check your API keys.');
 }
 
 console.log('App script loaded');
