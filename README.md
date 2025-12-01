@@ -115,8 +115,8 @@ Hold `Ctrl+L` to record your question:
 
 ### Screen Capture
 Analyze code problems from your screen:
-- **`Ctrl+S`** - Capture full screen and get AI analysis
-- **`Ctrl+P`** - Capture the area behind the app window
+- **`Ctrl+2`** - Capture full screen and get AI analysis
+- **`Ctrl+3`** - Capture the area behind the app window
 - Great for solving coding challenges shown on screen
 - AI will read the problem and provide the solution
 
