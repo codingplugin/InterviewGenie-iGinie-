@@ -1,0 +1,28 @@
+DEPENDENCIES FOR INVISIBLE INTERVIEW ASSISTANT
+=============================================
+
+To run this project on another PC, you need the following:
+
+1. SYSTEM SOFTWARE (Install this first)
+---------------------------------------
+* Node.js (LTS Version)
+  - Download: https://nodejs.org/
+  - Verify install by running: node -v
+
+2. PROJECT LIBRARIES (NPM Packages)
+-----------------------------------
+These are listed in 'package.json' and will be installed automatically.
+* electron (v28.0.0+) - The desktop app framework.
+* bytez.js (v3.0.0+)  - AI model SDK.
+
+3. HOW TO INSTALL & RUN
+-----------------------
+Open a terminal in the project folder and run:
+
+    npm install
+
+(This command is the Node.js equivalent of 'pip install -r requirements.txt'. It reads package.json and installs everything.)
+
+4. START THE APP
+----------------
+    npm start

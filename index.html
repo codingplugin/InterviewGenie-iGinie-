@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview Assistant</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">⚡ Interview Assistant</div>
+            <div class="controls">
+                <select id="languageSelect" class="lang-select" title="Select Coding Language">
+                    <option value="auto">Auto</option>
+                    <option value="python">Python</option>
+                    <option value="cpp">C++</option>
+                    <option value="java">Java</option>
+                    <option value="javascript">JavaScript</option>
+                    <option value="csharp">C#</option>
+                </select>
+                <input type="range" id="opacitySlider" min="10" max="100" value="100" title="Window Opacity">
+                <button id="settingsBtn" class="icon-btn" title="Settings">⚙️</button>
+                <button id="helpBtn" class="icon-btn" title="Shortcuts">❓</button>
+                <button id="minimizeBtn" class="icon-btn" title="Hide (Ctrl+Shift+I)">−</button>
+                <button id="closeBtn" class="icon-btn" title="Close">×</button>
+            </div>
+        </div>
+
+        <!-- Chat Messages -->
+        <div id="chatContainer" class="chat-container">
+            <div class="welcome-message">
+                <h2>👋 Welcome!</h2>
+                <p>Ask me anything about coding, algorithms, or technical concepts.</p>
+                <p class="hint">This window is invisible during screen sharing.</p>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="input-area">
+            <textarea id="messageInput" placeholder="Type your question or hold Ctrl+L to speak..." rows="1"></textarea>
+            <button id="clearBtn" class="icon-btn clear-btn" title="Clear Chat">🗑️</button>
+            <button id="sendBtn" class="send-btn">Send</button>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settingsModal" class="modal">
+            <div class="modal-content">
+                <h3>Settings</h3>
+                <div class="input-group">
+                    <label>Gemini API Key</label>
+                    <input type="password" id="apiKeyInput" placeholder="Enter your API key">
+                    <small>Get a free key at <a href="https://aistudio.google.com"
+                            target="_blank">aistudio.google.com</a></small>
+                </div>
+                <div class="input-group">
+                    <label>Model ID (Optional)</label>
+                    <input type="text" id="modelInput" placeholder="e.g. gemini-1.5-pro (Leave empty for auto)">
+                </div>
+                <div class="modal-actions">
+                    <button id="saveSettingsBtn" class="btn primary-btn">Save</button>
+                    <button id="closeSettingsBtn" class="btn">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help Modal -->
+        <div id="helpModal" class="modal">
+            <div class="modal-content">
+                <h3>⌨️ Shortcuts</h3>
+                <div class="shortcuts-list">
+                    <div class="shortcut-item">
+                        <span class="key">Ctrl + L</span>
+                        <span class="desc">Hold to Speak (Voice Input)</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="key">Ctrl + S</span>
+                        <span class="desc">Capture Full Screen</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="key">Ctrl + P</span>
+                        <span class="desc">Capture Area Behind App</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="key">Ctrl + Shift + I</span>
+                        <span class="desc">Toggle App Visibility</span>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button id="closeHelpBtn" class="btn primary-btn">Got it</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
