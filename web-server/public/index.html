@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview Genie - AI Copilot</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: white;
+        }
+
+        .glass {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .gradient-text {
+            background: linear-gradient(to right, #8b5cf6, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-icon-container {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 2rem;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .hero-icon {
+            width: 120px;
+            height: 120px;
+            border-radius: 24px;
+            object-fit: cover;
+            box-shadow: 0 0 40px rgba(139, 92, 246, 0.5);
+            /* Purple glow */
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-15px);
+            }
+
+            100% {
+                transform: translateY(0px);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="p-6 flex justify-between items-center max-w-6xl mx-auto z-50 relative">
+        <div class="flex items-center gap-3">
+            <img id="navAvatar" src="assets/ICON.jpeg"
+                class="w-10 h-10 rounded-full border-2 border-purple-500 object-cover">
+            <span class="text-xl font-bold hidden md:block">Interview Genie</span>
+        </div>
+
+        <!-- Auth Buttons (Non-Logged in) -->
+        <div id="authButtons" class="flex gap-4">
+            <a href="#guide" class="px-4 py-2 text-gray-300 hover:text-white transition">Setup Guide</a>
+            <a href="login.html" class="px-4 py-2 text-gray-300 hover:text-white transition">Login</a>
+            <a href="login.html"
+                class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg font-bold transition">Sign Up</a>
+        </div>
+
+        <!-- User Menu (Logged In) -->
+        <div id="userMenu" class="hidden flex items-center gap-4">
+            <button id="adminBtn"
+                class="hidden px-3 py-1 bg-red-600 hover:bg-red-700 rounded text-xs font-bold uppercase tracking-wider">Admin</button>
+            <div class="text-right">
+                <div id="userEmail" class="text-sm font-bold"></div>
+                <div id="userStatus" class="text-xs text-gray-400 uppercase tracking-widest">FREE</div>
+            </div>
+            <button id="logoutBtn" class="text-xs text-gray-500 hover:text-white underline">Logout</button>
+        </div>
+    </nav>
+
+    <!-- Admin Modal -->
+    <div id="adminModal"
+        class="fixed inset-0 bg-black bg-opacity-80 hidden z-50 flex items-center justify-center backdrop-filter backdrop-blur-sm">
+        <div class="glass p-8 rounded-xl max-w-md w-full border border-red-500/30">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-red-400">⚡ Admin Dashboard</h3>
+                <button id="closeAdminBtn" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+            </div>
+
+            <p class="mb-4 text-gray-300">Activate Premium for a user manually.</p>
+
+            <form id="adminForm" class="space-y-4">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">User Email</label>
+                    <input type="email" id="targetEmail" required
+                        class="w-full bg-gray-900 border border-gray-700 rounded p-3 text-white focus:border-red-500 outline-none"
+                        placeholder="user@example.com">
+                </div>
+                <button type="submit" id="activateBtn"
+                    class="w-full py-3 bg-red-600 hover:bg-red-700 rounded font-bold transition">Activate
+                    Premium</button>
+                <div id="adminMsg" class="text-center text-sm min-h-[1.5em]"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Hero -->
+    <header class="text-center py-20 px-4 relative">
+        <div class="hero-icon-container">
+            <img src="assets/ICON.jpeg" alt="App Icon" class="hero-icon">
+        </div>
+
+        <h1 class="text-5xl md:text-7xl font-extrabold mb-6">
+            Ace Your Interviews with <br> <span class="gradient-text">Invisible AI</span>
+        </h1>
+        <p class="text-gray-400 text-xl max-w-2xl mx-auto mb-10">
+            The ultimate desktop copilot for coding interviews. Get real-time answers, code solutions, and explanations
+            without being detected.
+        </p>
+
+        <div id="heroButtons" class="flex flex-col md:flex-row gap-4 justify-center">
+            <a href="#pricing"
+                class="px-8 py-4 bg-purple-600 hover:bg-purple-700 rounded-lg font-bold text-lg transition transform hover:scale-105">Get
+                Premium</a>
+            <a href="login.html"
+                class="px-8 py-4 glass hover:bg-gray-800 rounded-lg font-bold text-lg transition flex items-center gap-2 justify-center">
+                <span>🪟</span> Download for Windows
+            </a>
+        </div>
+
+        <div id="heroLoggedIn" class="hidden flex flex-col items-center gap-4">
+            <p class="text-green-400 font-bold text-lg">✅ You are logged in</p>
+            <div class="flex gap-4">
+                <button id="downloadAppBtn"
+                    class="px-8 py-4 bg-gray-800 border border-gray-600 hover:bg-gray-700 rounded-lg font-bold text-lg transition flex items-center gap-2">
+                    <span>🪟</span> Download for Windows
+                </button>
+            </div>
+        </div>
+    </header>
+    <!-- Features -->
+    <section class="max-w-6xl mx-auto py-16 px-4 grid md:grid-cols-3 gap-8">
+        <div class="glass p-8 rounded-xl">
+            <div class="text-4xl mb-4">👻</div>
+            <h3 class="text-xl font-bold mb-2">Invisible Mode</h3>
+            <p class="text-gray-400">Completely hidden from screen sharing software like Zoom, Teams, and Google
+                Meet.
+            </p>
+        </div>
+        <div class="glass p-8 rounded-xl">
+            <div class="text-4xl mb-4">🚀</div>
+            <h3 class="text-xl font-bold mb-2">Instant Answers</h3>
+            <p class="text-gray-400">Get code solutions in Python, Java, C++, and JS instantly with AI-powered
+                analysis.
+            </p>
+        </div>
+        <div class="glass p-8 rounded-xl">
+            <div class="text-4xl mb-4">🎙️</div>
+            <h3 class="text-xl font-bold mb-2">Voice & Screen</h3>
+            <p class="text-gray-400">Capture questions from screen or audio. No typing required.</p>
+        </div>
+    </section>
+
+    <!-- Setup Guide -->
+    <section id="guide" class="max-w-4xl mx-auto py-20 px-4">
+        <h2 class="text-4xl font-bold mb-12 text-center">How to Setup</h2>
+
+        <div class="space-y-6">
+            <!-- Step 1 -->
+            <div class="glass p-8 rounded-xl flex flex-col md:flex-row gap-6 items-start">
+                <div
+                    class="bg-purple-600 w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl flex-shrink-0">
+                    1</div>
+                <div>
+                    <h3 class="text-xl font-bold mb-2">Download & Install</h3>
+                    <p class="text-gray-400 mb-4">Get the latest Windows app. Run the installer and login with your
+                        Google Account.</p>
+                </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="glass p-8 rounded-xl flex flex-col md:flex-row gap-6 items-start border border-purple-500/30">
+                <div
+                    class="bg-purple-600 w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl flex-shrink-0">
+                    2</div>
+                <div>
+                    <h3 class="text-xl font-bold mb-2">Get Free Gemini API Key</h3>
+                    <p class="text-gray-400 mb-4">
+                        The app uses Google's powerful Gemini Pro model. It is <span
+                            class="text-green-400 font-bold">100% Free</span> currently.
+                    </p>
+                    <ol class="list-decimal list-inside text-gray-400 space-y-2 mb-4 bg-gray-900/50 p-4 rounded-lg">
+                        <li>Go to <a href="https://aistudio.google.com/app/apikey" target="_blank"
+                                class="text-purple-400 hover:text-purple-300 underline font-bold">Google AI Studio
+                                ↗</a>
+                        </li>
+                        <li>Click <span class="text-white font-bold">Create API Key</span></li>
+                        <li>Copy the key (starts with <code>AIza...</code>)</li>
+                    </ol>
+                    <p class="text-sm text-gray-500">Paste this key in the App Settings (⚙️ icon).</p>
+                </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="glass p-8 rounded-xl flex flex-col md:flex-row gap-6 items-start">
+                <div
+                    class="bg-purple-600 w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl flex-shrink-0">
+                    3</div>
+                <div>
+                    <h3 class="text-xl font-bold mb-2">Customize Prompts</h3>
+                    <p class="text-gray-400 mb-2">Go to Settings to tweak how the AI behaves:</p>
+                    <ul class="list-disc list-inside text-gray-400 space-y-1 ml-2">
+                        <li><strong class="text-white">System Prompt:</strong> "You are a Senior Java Developer
+                            interview helper..."</li>
+                        <li><strong class="text-white">Voice Prompt:</strong> "Give very short, concise answers for
+                            spoken questions."</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing -->
+    <section id="pricing" class="py-20 px-4 text-center">
+        <h2 class="text-4xl font-bold mb-12">Simple Pricing</h2>
+        <div class="glass max-w-md mx-auto p-8 rounded-2xl border-2 border-purple-500 relative overflow-hidden">
+            <div class="absolute top-0 right-0 bg-purple-600 text-xs font-bold px-3 py-1 rounded-bl-lg">POPULAR
+            </div>
+            <h3 class="text-2xl font-bold mb-2">Premium Pass</h3>
+            <div class="text-5xl font-extrabold mb-6">₹10 <span class="text-lg text-gray-400 font-normal">/
+                    lifetime</span></div>
+
+            <ul class="text-left space-y-3 mb-8 text-gray-300">
+                <li class="flex items-center gap-2">✅ Unlimited AI Queries</li>
+                <li class="flex items-center gap-2">✅ Full Invisible Mode</li>
+                <li class="flex items-center gap-2">✅ Priority Support</li>
+                <li class="flex items-center gap-2">✅ Instant Activation</li>
+            </ul>
+
+            <!-- Dynamic Pricing Button -->
+            <button id="pricingBtn"
+                class="block w-full py-4 bg-purple-600 hover:bg-purple-700 rounded-lg font-bold text-lg transition">
+                Login to Pay
+            </button>
+
+            <p class="text-xs text-gray-500 mt-4">Secure payment via Razorpay. Use same email as in App.</p>
+        </div>
+    </section>
+
+    <!-- footer -->
+    <footer class="text-center py-10 text-gray-600">
+        &copy; 2025 Interview Genie. All rights reserved.
+    </footer>
+
+    <script>
+        // DOM Elements
+        const authButtons = document.getElementById('authButtons');
+        const userMenu = document.getElementById('userMenu');
+        const navAvatar = document.getElementById('navAvatar');
+        const userEmail = document.getElementById('userEmail');
+        const userStatus = document.getElementById('userStatus');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const pricingBtn = document.getElementById('pricingBtn');
+        const heroButtons = document.getElementById('heroButtons');
+        const heroLoggedIn = document.getElementById('heroLoggedIn');
+        const downloadAppBtn = document.getElementById('downloadAppBtn');
+
+        // Admin Elements
+        const adminBtn = document.getElementById('adminBtn');
+        const adminModal = document.getElementById('adminModal');
+        const closeAdminBtn = document.getElementById('closeAdminBtn');
+        const adminForm = document.getElementById('adminForm');
+        const targetEmailInput = document.getElementById('targetEmail');
+        const activateBtn = document.getElementById('activateBtn');
+        const adminMsg = document.getElementById('adminMsg');
+
+        // Check Login
+        const token = localStorage.getItem('auth-token');
+        let storedUser = {};
+        try { storedUser = JSON.parse(localStorage.getItem('user-data') || '{}'); } catch (e) { }
+
+        if (token) {
+            // SHOW LOGGED IN STATE
+            authButtons.classList.add('hidden');
+            userMenu.classList.remove('hidden');
+
+            heroButtons.classList.add('hidden');
+            heroLoggedIn.classList.remove('hidden');
+
+            userEmail.textContent = storedUser.email || 'User';
+            if (storedUser.picture) navAvatar.src = storedUser.picture;
+
+            // Show Admin Button
+            if (storedUser.email === 'sngamic1@gmail.com') {
+                adminBtn.classList.remove('hidden');
+                // Force UI to show premium immediately for admin
+                userStatus.textContent = "PREMIUM MEMBER";
+                userStatus.className = "text-xs text-yellow-500 font-bold uppercase tracking-widest";
+            }
+
+            checkStatus(); // Fetch latest status
+
+            // Configure Pricing Button
+            pricingBtn.textContent = 'Upgrade Now';
+            pricingBtn.onclick = handlePayment;
+
+        } else {
+            // SHOW LOGGED OUT STATE
+            pricingBtn.onclick = () => window.location.href = 'login.html';
+        }
+
+        // Admin Logic
+        adminBtn.addEventListener('click', () => adminModal.classList.remove('hidden'));
+        closeAdminBtn.addEventListener('click', () => adminModal.classList.add('hidden'));
+
+        adminForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = targetEmailInput.value;
+            activateBtn.disabled = true;
+            activateBtn.textContent = 'Activating...';
+            adminMsg.textContent = '';
+            adminMsg.className = 'text-center text-sm min-h-[1.5em] text-gray-400';
+
+            try {
+                const res = await fetch('/api/auth/admin/activate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-auth-token': token
+                    },
+                    body: JSON.stringify({ email })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    adminMsg.textContent = '✅ ' + data.msg;
+                    adminMsg.className = 'text-center text-sm min-h-[1.5em] text-green-400';
+                    targetEmailInput.value = '';
+                } else {
+                    throw new Error(data.msg || 'Activation Failed');
+                }
+            } catch (err) {
+                adminMsg.textContent = '❌ ' + err.message;
+                adminMsg.className = 'text-center text-sm min-h-[1.5em] text-red-400';
+            } finally {
+                activateBtn.disabled = false;
+                activateBtn.textContent = 'Activate Premium';
+            }
+        });
+
+        // Fetch Real-time Status
+        async function checkStatus() {
+            try {
+                const res = await fetch('/api/auth/me', { headers: { 'x-auth-token': token } });
+                const user = await res.json();
+
+                if (user.isPremium) {
+                    userStatus.textContent = "PREMIUM MEMBER";
+                    userStatus.className = "text-xs text-yellow-500 font-bold uppercase tracking-widest";
+                    pricingBtn.textContent = "✅ You are Premium";
+                    pricingBtn.disabled = true;
+                    pricingBtn.className = "block w-full py-4 bg-green-600 cursor-default rounded-lg font-bold text-lg";
+                }
+            } catch (e) {
+                console.log('Auth check failed', e);
+            }
+        }
+
+        // Logout Logic
+        logoutBtn.addEventListener('click', () => {
+            localStorage.removeItem('auth-token');
+            localStorage.removeItem('user-data');
+            window.location.reload();
+        });
+
+        // Download Logic
+        downloadAppBtn.addEventListener('click', () => {
+            // alert('Downloading Interview Genie Installer...');
+            const link = document.createElement('a');
+            link.href = '/Interview Genie Setup 2.0.0.exe';
+            link.download = 'Interview Genie Setup 2.0.0.exe';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+
+
+        // Payment Logic
+        async function handlePayment() {
+            const btn = pricingBtn;
+            btn.textContent = 'Processing...';
+            btn.disabled = true;
+
+            try {
+                // 1. Create Order
+                const res = await fetch('/api/payment/create-order', {
+                    method: 'POST',
+                    headers: { 'x-auth-token': token }
+                });
+                const order = await res.json();
+                if (!res.ok) throw new Error('Order Failed');
+
+                // 2. Open Checkout
+                var options = {
+                    "key": "rzp_test_RoI79b29xp6b0N",
+                    "amount": order.amount,
+                    "currency": "INR",
+                    "name": "Interview Genie",
+                    "description": "Premium Upgrade",
+                    "image": "assets/ICON.jpeg",
+                    "order_id": order.id,
+                    "handler": async function (response) {
+                        btn.textContent = 'Verifying...';
+                        const verifyRes = await fetch('/api/payment/verify-payment', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                            body: JSON.stringify({
+                                razorpay_order_id: response.razorpay_order_id,
+                                razorpay_payment_id: response.razorpay_payment_id,
+                                razorpay_signature: response.razorpay_signature
+                            })
+                        });
+
+                        if (verifyRes.ok) {
+                            alert('✅ Payment Successful! You are now Premium.');
+                            window.location.reload();
+                        } else {
+                            alert('Verification failed');
+                            btn.textContent = 'Upgrade Now';
+                            btn.disabled = false;
+                        }
+                    },
+                    "theme": { "color": "#7c3aed" }
+                };
+                var rzp1 = new Razorpay(options);
+                rzp1.open();
+
+            } catch (error) {
+                console.error(error);
+                btn.textContent = 'Upgrade Now';
+                btn.disabled = false;
+                alert('Server Error. Try again.');
+            }
+        }
+    </script>
+</body>
+
+</html>

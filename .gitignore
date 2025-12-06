@@ -39,3 +39,8 @@ coverage/
 # Temporary files
 *.tmp
 .cache/
+dist/
+build_output/
+.cache/
+
+web-server/public/*.exe

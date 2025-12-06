@@ -45,7 +45,9 @@ IMPORTANT RULES:
 12. If it's a "what are the differences between" question, give the differences with points and one example
 13. Give the answer in points if necessary.
 14. Answer the question in sequence of what is asked
-15. Always use simple words to answer the questions`;
+15. Always use simple words to answer the questions
+16. If the question involves multiple parts, address each part clearly and separately.
+17. Your name is Interview Genie if anyone asks`;
 
 const DEFAULT_PROMPT_VOICE = `INSTRUCTION: The user has provided an audio recording. This audio is STEREO. 
 - **LEFT CHANNEL**: This is the CANDIDATE (User).
@@ -55,7 +57,8 @@ Your task is to:
 1. Identify who is speaking based on the channel.
 2. If the INTERVIEWER (Right Channel) asks a question, provide the answer for the Candidate to say.
 3. If the CANDIDATE (Left Channel) asks you for help, answer their specific request.
-4. Start your response with "TRANSCRIPTION: " followed by a transcript of the audio (labeling speakers as [Interviewer] or [Candidate] if possible). Then, add a newline and provide the ANSWER.`;
+4. Start your response with "TRANSCRIPTION: " followed by a transcript of the audio (labeling speakers as [Interviewer] or [Candidate] if possible). Then, add a newline and provide the ANSWER.
+5. Your name is Interview Genie if anyone asks`;
 
 const DEFAULT_PROMPT_IMAGE = `INSTRUCTION: The user has provided a screenshot. This image likely contains a Data Structures & Algorithms (DSA) problem, a coding challenge, or a technical interview question.
 Your task is to:
@@ -122,13 +125,167 @@ document.addEventListener('DOMContentLoaded', () => {
     confirmYes = document.getElementById('confirmYes');
     confirmNo = document.getElementById('confirmNo');
 
+    // Profile Elements
+    const profileEmail = document.getElementById('profileEmail');
+    const profileStatus = document.getElementById('profileStatus');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const profileSection = document.querySelector('.profile-section');
+
+    // Fetch User Profile
+    fetchUserProfile();
+
+    async function fetchUserProfile() {
+        const token = localStorage.getItem('auth-token');
+
+        if (!token) {
+            // Not logged in
+            if (profileSection) profileSection.style.display = 'none';
+            if (authBtn) authBtn.style.display = 'block';
+            return;
+        }
+
+        try {
+            // CHANGE THIS URL AFTER DEPLOYING SERVER
+            const API_URL = 'http://localhost:5000/api/auth/me';
+
+            const response = await fetch(API_URL, {
+                headers: { 'x-auth-token': token }
+            });
+
+            if (response.ok) {
+                const user = await response.json();
+
+                // Show Profile Section if logged in
+                if (profileSection) profileSection.style.display = 'block';
+                if (authBtn) authBtn.style.display = 'none';
+
+                if (profileEmail) profileEmail.textContent = user.email;
+                if (profileStatus) {
+                    profileStatus.textContent = user.isPremium ? 'PREMIUM' : 'FREE';
+                    profileStatus.style.background = user.isPremium ? '#fbbf24' : '#94a3b8';
+                }
+
+                // Sync premium status
+                localStorage.setItem('is-premium', user.isPremium);
+
+                // IMMEDIATE UI UPDATE
+                if (user.isPremium) {
+                    // Hide Upgrade Button
+                    const upgradeBtn = document.getElementById('upgradeBtn');
+                    if (upgradeBtn) upgradeBtn.style.display = 'none';
+
+                    // Remove Warning Text
+                    const welcomeHint = document.querySelector('.welcome-message .hint');
+                    if (welcomeHint) {
+                        welcomeHint.textContent = '👻 Invisible Mode Active';
+                        welcomeHint.style.color = '#4ade80'; // Green
+                    }
+
+                    // Tell Main Process to Enable Invisible Mode
+                    ipcRenderer.send('login-success', { isPremium: true });
+                }
+
+            } else if (response.status === 401) {
+                // Token invalid/expired - Logout
+                console.log('Session expired');
+                localStorage.removeItem('auth-token');
+                localStorage.removeItem('is-premium');
+                if (profileSection) profileSection.style.display = 'none';
+                if (authBtn) authBtn.style.display = 'block';
+            }
+        } catch (err) {
+            console.error('Error fetching profile:', err);
+            // On network error, maybe keep quiet or show offline status
+            // But don't logout immediately in case it's just wifi
+        }
+    }
+
+    // Logout Handler
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', async () => {
+            if (await showConfirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('auth-token');
+                localStorage.removeItem('is-premium');
+                // Tell main process to restart/show login
+                ipcRenderer.send('logout');
+            }
+        });
+    }
+
+    // Auth Handler (Login Button in Header)
+    const authBtn = document.getElementById('authBtn');
+    if (authBtn) {
+        authBtn.addEventListener('click', () => {
+            ipcRenderer.send('logout'); // Effectively restarts to login screen
+        });
+    }
+
+    // LISTENER FOR GOOGLE/DEEP LINK LOGIN SUCCESS
+    ipcRenderer.on('google-login-success', (event, data) => {
+        console.log('Google Login Success in Renderer:', data);
+
+        if (data && data.token) {
+            // Save Token
+            localStorage.setItem('auth-token', data.token);
+
+            // Save User Data if present
+            if (data.user) {
+                localStorage.setItem('user-data', JSON.stringify(data.user));
+            }
+
+            // Save Premium Status
+            localStorage.setItem('is-premium', data.isPremium);
+
+            // Reload Profile immediately
+            fetchUserProfile();
+
+            // Show Success UI
+            addSystemMessage('✅ Logged in successfully via Google!');
+        }
+    });
+
+    // Free User Logic
+    const upgradeBtn = document.getElementById('upgradeBtn');
+    const isPremium = localStorage.getItem('is-premium') === 'true';
+
+    if (!isPremium) {
+        if (upgradeBtn) {
+            upgradeBtn.style.display = 'block';
+            upgradeBtn.addEventListener('click', () => {
+                const { shell } = require('electron'); // Ensure shell is available
+                shell.openExternal('http://localhost:5000/index.html#pricing');
+            });
+        }
+
+        // Show auth button if not logged in (token check better here, but simplistic for now)
+        const token = localStorage.getItem('auth-token');
+        if (token && authBtn) {
+            authBtn.style.display = 'none';
+        }
+
+        // Update welcome message
+        const welcomeHint = document.querySelector('.welcome-message .hint');
+        if (welcomeHint) {
+            welcomeHint.textContent = '⚠️ This window is visible. Upgrade to make it invisible.';
+            welcomeHint.style.color = '#fbbf24'; // Gold warning color
+        }
+    } else {
+        // If premium, hide login button
+        if (authBtn) authBtn.style.display = 'none';
+    }
+
     // Load saved settings
+    // Note: For commercial version, we might want to fetch this from server or keep it empty
     if (apiKey) {
         const keys = apiKey.split(',').map(k => k.trim());
         const inputs = document.querySelectorAll('.api-key-input');
         inputs.forEach((input, index) => {
             if (keys[index]) input.value = keys[index];
         });
+    } else {
+        // Ensure inputs are empty
+        const inputs = document.querySelectorAll('.api-key-input');
+        inputs.forEach(input => input.value = '');
     }
     if (customModelId) modelInput.value = customModelId;
 
@@ -676,7 +833,20 @@ function addMessage(text, type) {
 
     const avatar = document.createElement('div');
     avatar.className = 'message-avatar';
-    avatar.textContent = type === 'user' ? '👤' : '🤖';
+
+    if (type === 'ai') {
+        const img = document.createElement('img');
+        img.src = 'assets/ICON.jpeg';
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'cover';
+        img.style.borderRadius = '50%';
+        avatar.appendChild(img);
+        // Remove default text/background styling handles by CSS if needed, 
+        // but replacing content usually helps
+    } else {
+        avatar.textContent = '👤';
+    }
 
     const content = document.createElement('div');
     content.className = 'message-content';

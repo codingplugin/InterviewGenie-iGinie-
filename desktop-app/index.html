@@ -15,6 +15,9 @@
         <div class="header">
             <div class="logo">⚡ iGenie</div>
             <div class="controls">
+                <button id="authBtn" class="upgrade-btn" style="background: #3b82f6; margin-right: 10px;">Login</button>
+                <button id="upgradeBtn" class="upgrade-btn" style="display: none; margin-right: 10px;">👑
+                    Upgrade</button>
                 <select id="languageSelect" class="lang-select" title="Select Coding Language">
                     <option value="auto">Auto</option>
                     <option value="python">Python</option>
@@ -53,6 +56,21 @@
                 <h3>Settings</h3>
 
                 <div class="modal-body">
+                    <div class="input-group profile-section"
+                        style="background: rgba(139, 92, 246, 0.1); padding: 15px; border-radius: 8px; border: 1px solid rgba(139, 92, 246, 0.3); margin-bottom: 20px;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <h4 style="margin: 0; color: #fff;">👤 Profile</h4>
+                            <span id="profileStatus"
+                                style="font-size: 12px; padding: 2px 8px; border-radius: 10px; background: #34d399; color: #000; font-weight: bold;">Free</span>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="font-size: 12px; color: #94a3b8;">Email</label>
+                            <div id="profileEmail" style="color: #fff; font-weight: 500;">Loading...</div>
+                        </div>
+                        <button id="logoutBtn" class="btn"
+                            style="width: 100%; background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.5);">Logout</button>
+                    </div>
                     <div class="input-group">
                         <label>API Keys (Auto-Rotation)</label>
                         <div id="apiKeyContainer"
