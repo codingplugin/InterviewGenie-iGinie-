@@ -8,14 +8,14 @@ services:
     startCommand: node index.js
     envVars:
       - key: MONGODB_URI
-        sync: false
+        value: "mongodb+srv://iGenie_user_db:Subhradip%401@cluster0.yh3chfn.mongodb.net/interview-genie?retryWrites=true&w=majority&appName=Cluster0"
       - key: JWT_SECRET
-        generateValue: true
+        value: "igenie_secret_key_2025_secure"
       - key: RAZORPAY_KEY_ID
-        sync: false
+        value: "rzp_test_RoI79b29xp6b0N"
       - key: RAZORPAY_KEY_SECRET
-        sync: false
+        value: "AT5ZHmI9RU6ohktqPXb4OhIN"
       - key: GOOGLE_CLIENT_ID
-        sync: false
+        value: "1006736129206-nuusm1qrqbhnuaf2nvk4h0q26g1270nq.apps.googleusercontent.com"
       - key: GOOGLE_CLIENT_SECRET
-        sync: false
+        value: "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"
