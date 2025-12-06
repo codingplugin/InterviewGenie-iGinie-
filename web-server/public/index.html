@@ -202,7 +202,7 @@
                 <div>
                     <h3 class="text-xl font-bold mb-2">Get Free Gemini API Key</h3>
                     <p class="text-gray-400 mb-4">
-                        The app uses Google's powerful Gemini Pro model. It is <span
+                        The app uses Google's powerful Gemini model API. It is <span
                             class="text-green-400 font-bold">100% Free</span> currently.
                     </p>
                     <ol class="list-decimal list-inside text-gray-400 space-y-2 mb-4 bg-gray-900/50 p-4 rounded-lg">
@@ -392,16 +392,10 @@
 
         // Download Logic
         downloadAppBtn.addEventListener('click', () => {
-            // alert('Downloading Interview Genie Installer...');
-            const link = document.createElement('a');
-            link.href = '/Interview Genie Setup 2.0.0.exe';
-            link.download = 'Interview Genie Setup 2.0.0.exe';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            // Redirect to GitHub Releases
+            const ghLink = 'https://github.com/codingplugin/InterviewGenie-iGinie-/releases/download/v2.0.0/Interview.Genie.Setup.2.0.0.exe';
+            window.open(ghLink, '_blank');
         });
-
-
 
         // Payment Logic
         async function handlePayment() {
