@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const nodemailer = require('nodemailer');
+
 const User = require('../models/User');
 const PremiumRequest = require('../models/PremiumRequest');
 const jwt = require('jsonwebtoken');
@@ -65,38 +65,7 @@ router.post('/request-access', auth, async (req, res) => {
         });
         await newRequest.save();
 
-        // Send Email Notification
-        // Send Email Notification
-        let emailMsg = ' (Email sent to Admin)';
-
-        if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-            try {
-                const transporter = nodemailer.createTransport({
-                    host: 'smtp.gmail.com',
-                    port: 465,
-                    secure: true,
-                    auth: {
-                        user: process.env.EMAIL_USER,
-                        pass: process.env.EMAIL_PASS
-                    }
-                });
-
-                await transporter.sendMail({
-                    from: process.env.EMAIL_USER,
-                    to: 'sngamic1@gmail.com',
-                    subject: '🚀 New Premium Request - Interview Genie',
-                    text: `User requested access:\n\nEmail: ${user.email}\nDate: ${new Date().toLocaleString()}\n\nGo to Admin Dashboard to activate.`
-                });
-                console.log('Email notification sent');
-            } catch (emailErr) {
-                console.error('Email failed:', emailErr);
-                emailMsg = ' (Email Failed: ' + emailErr.message + ')';
-            }
-        } else {
-            emailMsg = ' (Email Skipped: Config missing)';
-        }
-
-        res.json({ msg: 'Request saved!' + emailMsg });
+        res.json({ msg: 'Request sent! We will contact you shortly.' });
     } catch (err) {
         console.error(err);
         res.status(500).send('Server Error');
