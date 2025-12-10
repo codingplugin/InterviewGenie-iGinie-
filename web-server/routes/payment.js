@@ -66,6 +66,9 @@ router.post('/request-access', auth, async (req, res) => {
         await newRequest.save();
 
         // Send Email Notification
+        // Send Email Notification
+        let emailMsg = ' (Email sent to Admin)';
+
         if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
             try {
                 const transporter = nodemailer.createTransport({
@@ -85,10 +88,13 @@ router.post('/request-access', auth, async (req, res) => {
                 console.log('Email notification sent');
             } catch (emailErr) {
                 console.error('Email failed:', emailErr);
+                emailMsg = ' (Email Failed: ' + emailErr.message + ')';
             }
+        } else {
+            emailMsg = ' (Email Skipped: Config missing)';
         }
 
-        res.json({ msg: 'Request sent! We will contact you shortly.' });
+        res.json({ msg: 'Request saved!' + emailMsg });
     } catch (err) {
         console.error(err);
         res.status(500).send('Server Error');
