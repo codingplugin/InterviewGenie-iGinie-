@@ -146,7 +146,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             // CHANGE THIS URL AFTER DEPLOYING SERVER
-            const API_URL = 'http://localhost:5000/api/auth/me';
+            // CHANGE THIS URL AFTER DEPLOYING SERVER
+            const API_URL = 'https://interview-genie-server.onrender.com/api/auth/me';
 
             const response = await fetch(API_URL, {
                 headers: { 'x-auth-token': token }
@@ -253,7 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
             upgradeBtn.style.display = 'block';
             upgradeBtn.addEventListener('click', () => {
                 const { shell } = require('electron'); // Ensure shell is available
-                shell.openExternal('http://localhost:5000/index.html#pricing');
+                shell.openExternal('https://interview-genie-server.onrender.com/index.html#pricing');
             });
         }
 

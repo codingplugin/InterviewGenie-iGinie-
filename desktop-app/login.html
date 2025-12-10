@@ -223,8 +223,9 @@
         const backBtn = document.getElementById('backBtn');
         const openWebBtn = document.getElementById('openWebBtn');
 
-        // CHANGE THIS URL AFTER DEPLOYING SERVER
-        const API_URL = 'http://127.0.0.1:5000/api/auth';
+        // PRODUCTION URL
+        const API_URL = 'https://interview-genie-server.onrender.com/api/auth';
+        const WEB_URL = 'https://interview-genie-server.onrender.com/login.html';
 
         closeAppBtn.addEventListener('click', () => {
             ipcRenderer.send('close-app');
@@ -241,14 +242,14 @@
 
         openWebBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            shell.openExternal('http://localhost:5000/login.html');
+            shell.openExternal(WEB_URL);
         });
 
         // Google Login Trigger
         const googleLoginBtn = document.getElementById('googleLoginBtn');
         googleLoginBtn.addEventListener('click', () => {
-            // Open in Default Browser (Chrome/Edge) to ensure Google Login works
-            shell.openExternal('http://localhost:5000/login.html');
+            // Open in Default Browser
+            shell.openExternal(WEB_URL);
 
             // Show loading state
             submitBtn.textContent = 'Waiting for browser login...';
@@ -303,14 +304,6 @@
                 errorMsg.textContent = err.message;
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Login';
-            }
-        });
-
-        ipcRenderer.on('google-login-success', (event, data) => {
-            if (data.token) {
-                localStorage.setItem('auth-token', data.token);
-                localStorage.setItem('is-premium', data.isPremium);
-                ipcRenderer.send('login-success', data);
             }
         });
     </script>

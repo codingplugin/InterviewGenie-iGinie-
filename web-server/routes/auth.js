@@ -3,6 +3,7 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const PremiumRequest = require('../models/PremiumRequest');
 
 const validator = require('validator');
 
@@ -223,6 +224,29 @@ router.post('/admin/activate', async (req, res) => {
         await user.save();
 
         res.json({ msg: `Premium activated for ${email}` });
+
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+// Admin: Get Requests
+router.get('/admin/requests', async (req, res) => {
+    const ADMIN_EMAIL = 'sngamic1@gmail.com';
+    try {
+        const token = req.header('x-auth-token');
+        if (!token) return res.status(401).json({ msg: 'No token' });
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
+        const adminUser = await User.findById(decoded.user.id);
+
+        if (!adminUser || adminUser.email !== ADMIN_EMAIL) {
+            return res.status(403).json({ msg: 'Access Denied' });
+        }
+
+        const requests = await PremiumRequest.find({ status: 'pending' }).sort({ createdAt: -1 });
+        res.json(requests);
 
     } catch (err) {
         console.error(err.message);

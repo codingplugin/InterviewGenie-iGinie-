@@ -1,4 +1,4 @@
-const { app, BrowserWindow, globalShortcut, ipcMain, desktopCapturer, screen } = require('electron');
+const { app, BrowserWindow, globalShortcut, ipcMain, desktopCapturer, screen, Tray, Menu } = require('electron');
 const path = require('path');
 
 // Suppress SSL errors in console (they're harmless)
@@ -18,7 +18,7 @@ function createWindow() {
         frame: false,
         transparent: true,
         alwaysOnTop: true,
-        skipTaskbar: false,
+        skipTaskbar: true,
         show: true,
         webPreferences: {
             nodeIntegration: true,
@@ -137,6 +137,7 @@ if (!gotTheLock) {
 
     app.whenReady().then(() => {
         createWindow();
+        createTray();
 
         // Register global shortcut to toggle visibility
         globalShortcut.register('CommandOrControl+Shift+I', () => {
@@ -199,6 +200,36 @@ function handleDeepLink(url) {
 app.on('window-all-closed', () => {
     app.quit();
 });
+
+let tray = null;
+function createTray() {
+    const iconPath = path.join(__dirname, 'assets/icon.png');
+    tray = new Tray(iconPath);
+    const contextMenu = Menu.buildFromTemplate([
+        {
+            label: 'Show/Hide App', click: () => {
+                if (mainWindow) {
+                    if (mainWindow.isVisible()) {
+                        mainWindow.hide();
+                        isVisible = false;
+                    } else {
+                        mainWindow.show();
+                        isVisible = true;
+                    }
+                }
+            }
+        },
+        { label: 'Quit', click: () => app.quit() }
+    ]);
+    tray.setToolTip('Interview Genie');
+    tray.setContextMenu(contextMenu);
+    tray.on('click', () => {
+        if (mainWindow) {
+            mainWindow.isVisible() ? mainWindow.hide() : mainWindow.show();
+            isVisible = mainWindow.isVisible();
+        }
+    });
+}
 
 // IPC handlers
 ipcMain.on('close-app', () => {

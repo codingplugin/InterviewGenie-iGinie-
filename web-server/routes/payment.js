@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
+const PremiumRequest = require('../models/PremiumRequest');
 const jwt = require('jsonwebtoken');
 
 // Middleware to verify token
@@ -42,6 +43,31 @@ router.post('/create-order', auth, async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).send('Error creating order');
+    }
+});
+
+// 1.5 Request Manual Access Route
+router.post('/request-access', auth, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ msg: 'User not found' });
+
+        // Check availability
+        const existing = await PremiumRequest.findOne({ userId: user.id, status: 'pending' });
+        if (existing) {
+            return res.status(200).json({ msg: 'Request already pending! Please check your email later.' });
+        }
+
+        const newRequest = new PremiumRequest({
+            userId: user.id,
+            email: user.email
+        });
+        await newRequest.save();
+
+        res.json({ msg: 'Request sent! We will contact you shortly.' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
     }
 });
 
